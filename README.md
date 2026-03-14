@@ -1,93 +1,328 @@
-# RudeBooks
+# RudeBooks — Shared Home Library Manager
 
+A mobile-first web app to manage a shared home library: owned books with physical locations, wishlist, ISBN scanning, and multi-user support.
 
+---
 
-## Getting started Swann
+## 1. Functional & Technical Architecture
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Tech Stack
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+| Layer | Choice | Rationale |
+|---|---|---|
+| Framework | Next.js 14 (App Router) | RSC, API routes, layouts |
+| Database | MongoDB + Mongoose | Flexible schema, good for book data |
+| Auth | NextAuth.js v4 | Session management, multi-user |
+| Styling | Tailwind CSS | Utility-first, mobile-first |
+| Validation | Zod | Type-safe schema validation |
+| Data Fetching | SWR | Client-side caching + revalidation |
+| Icons | Lucide React | Clean, consistent icon set |
+| Barcode | @zxing/library | Camera-based ISBN scanning |
+| URL Scraping | cheerio + node-fetch | Wishlist from product pages |
+| Fonts | Space Grotesk + DM Sans | Modern editorial feel |
 
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+### Architecture Overview
 
 ```
-cd existing_repo
-git remote add origin http://192.168.1.112/swann/rudebooks.git
-git branch -M main
-git push -uf origin main
+Browser (mobile-first)
+    │
+    ▼
+Next.js App Router
+    ├── Route Groups
+    │   ├── (auth)   — unauthenticated pages
+    │   └── (app)    — protected pages (require session)
+    │
+    ├── API Routes (/api/*)
+    │   ├── auth/[...nextauth]
+    │   ├── books/
+    │   ├── wishlist/
+    │   ├── locations/
+    │   ├── users/
+    │   ├── isbn/[isbn]      — ISBN lookup via Open Library API
+    │   └── scrape           — extract metadata from product URLs
+    │
+    └── lib/
+        ├── db.ts            — MongoDB singleton connection
+        ├── auth.ts          — NextAuth config
+        └── validators/      — Zod schemas
 ```
 
-## Integrate with your tools
+### Multi-User & Auth Flow
 
-- [ ] [Set up project integrations](http://192.168.1.112/swann/rudebooks/-/settings/integrations)
+- Registration creates a new Library and assigns user as `admin`
+- Invite link / code adds members with `member` role
+- Admin can manage locations, users, and library settings
+- Member can add/edit books and wishlist items
+- JWT sessions with library context in token payload
 
-## Collaborate with your team
+---
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## 2. MongoDB Data Model
 
-## Test and Deploy
+### `users`
+```ts
+{
+  _id: ObjectId,
+  name: string,
+  email: string,          // unique
+  passwordHash: string,
+  avatar?: string,
+  libraryId: ObjectId,    // primary library
+  role: 'admin' | 'member',
+  createdAt: Date
+}
+```
 
-Use the built-in continuous integration in GitLab.
+### `libraries`
+```ts
+{
+  _id: ObjectId,
+  name: string,
+  members: [{ userId: ObjectId, role: 'admin' | 'member' }],
+  inviteCode: string,     // unique, share to invite members
+  settings: {
+    defaultCurrency: string,
+    timezone: string
+  },
+  createdAt: Date
+}
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### `locations`
+```ts
+{
+  _id: ObjectId,
+  libraryId: ObjectId,
+  name: string,           // e.g. "Living Room — Left Shelf"
+  description?: string,
+  parentId?: ObjectId,    // optional nesting (room → shelf → row)
+  createdAt: Date
+}
+```
 
-***
+### `books`
+```ts
+{
+  _id: ObjectId,
+  libraryId: ObjectId,
+  title: string,
+  authors: string[],
+  isbn?: string,
+  isbn13?: string,
+  cover?: string,         // URL to cover image
+  description?: string,
+  publisher?: string,
+  publishedYear?: number,
+  pageCount?: number,
+  language?: string,
+  genres?: string[],
+  locationId?: ObjectId,  // physical location
+  locationNote?: string,  // e.g. "second row, blue spine"
+  status: 'owned' | 'lent',
+  lentTo?: string,
+  lentAt?: Date,
+  addedBy: ObjectId,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
-# Editing this README
+### `wishlistItems`
+```ts
+{
+  _id: ObjectId,
+  libraryId: ObjectId,
+  title: string,
+  authors?: string[],
+  isbn?: string,
+  cover?: string,
+  description?: string,
+  sourceUrl?: string,     // original product page URL
+  price?: number,
+  currency?: string,
+  priority: 'low' | 'medium' | 'high',
+  status: 'wanted' | 'purchased',
+  addedBy: ObjectId,
+  notes?: string,
+  createdAt: Date
+}
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+### `activityLogs` (optional)
+```ts
+{
+  _id: ObjectId,
+  libraryId: ObjectId,
+  userId: ObjectId,
+  action: 'add_book' | 'remove_book' | 'move_book' | 'add_wishlist' | 'purchase_wishlist' | ...,
+  entityType: 'book' | 'wishlistItem' | 'location' | 'user',
+  entityId: ObjectId,
+  metadata?: Record<string, unknown>,
+  createdAt: Date
+}
+```
 
-## Suggestions for a good README
+### Indexes
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+```js
+// books — search + filter
+{ libraryId: 1, createdAt: -1 }
+{ libraryId: 1, locationId: 1 }
+{ title: 'text', authors: 'text', isbn: 'text' }  // full-text
 
-## Name
-Choose a self-explaining name for your project.
+// wishlistItems
+{ libraryId: 1, status: 1, createdAt: -1 }
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+// activityLogs
+{ libraryId: 1, createdAt: -1 }
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+---
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## 3. Page Map & Component Structure
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### Routes
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```
+/                          — redirect to /dashboard or /signin
+/signin                    — sign in
+/signup                    — create account + library
+/dashboard                 — stats: totals, recent activity, wishlist preview
+/books                     — book list: search, filter by location
+/books/add                 — add book: manual form or ISBN scan tab
+/books/[id]                — book detail: info, location, edit/delete
+/wishlist                  — wishlist: filter by priority/status
+/wishlist/add              — add wishlist item: manual or from URL
+/wishlist/[id]             — wishlist item detail
+/locations                 — manage locations (admin)
+/settings                  — library name, invite code, members (admin)
+/profile                   — user profile, change password
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Component Tree
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```
+app/
+└── (app)/layout.tsx
+    └── AppShell
+        ├── TopBar          — library name, user menu
+        ├── {children}
+        └── BottomNav       — Dashboard | Books | Wishlist | Settings
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+components/
+├── ui/
+│   ├── Button
+│   ├── Card
+│   ├── Input / Textarea
+│   ├── Badge
+│   ├── Sheet (bottom drawer)
+│   ├── EmptyState
+│   └── Spinner
+├── books/
+│   ├── BookCard            — cover, title, author, location badge
+│   ├── BookList
+│   ├── BookForm            — add/edit form (Zod-validated)
+│   ├── IsbnScanner         — camera stream + ZXing decoder
+│   └── LocationPicker      — select from available locations
+├── wishlist/
+│   ├── WishlistCard
+│   ├── WishlistList
+│   ├── WishlistForm        — manual add
+│   └── UrlImport           — paste URL → fetch metadata → prefill form
+├── dashboard/
+│   ├── StatsGrid
+│   ├── RecentBooks
+│   └── WishlistPreview
+└── layout/
+    ├── TopBar
+    ├── BottomNav
+    └── PageHeader
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+---
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## 4. Implementation Plan
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### Phase 1 — Foundation
+- [x] Project scaffold (Next.js, Tailwind, TypeScript)
+- [ ] MongoDB connection + Mongoose models
+- [ ] NextAuth (credentials provider, JWT)
+- [ ] Signup flow (creates User + Library)
+- [ ] App shell: TopBar + BottomNav
+- [ ] Route protection (middleware)
 
-## License
-For open source projects, say how it is licensed.
+### Phase 2 — Books
+- [ ] Books API (CRUD)
+- [ ] Book list page with search
+- [ ] Book add — manual form
+- [ ] ISBN scanner (ZXing + Open Library API lookup)
+- [ ] Book detail page
+- [ ] Locations CRUD (admin)
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### Phase 3 — Wishlist
+- [ ] Wishlist API (CRUD)
+- [ ] Wishlist list + filter page
+- [ ] Add wishlist — manual form
+- [ ] Add wishlist — URL import (scrape metadata)
+- [ ] Mark as purchased → promote to books
+
+### Phase 4 — Polish
+- [ ] Dashboard stats
+- [ ] Activity log
+- [ ] Settings page (members, invite code)
+- [ ] Profile page
+- [ ] PWA manifest
+
+---
+
+## 5. UI/UX Direction
+
+### Design Principles (uupm-inspired)
+
+- **Mobile-first**: bottom navigation, full-width cards, large tap targets (min 44px)
+- **Glass-morphism cards**: `backdrop-blur`, subtle borders, layered depth
+- **Gradient accents**: blue-to-indigo primary, amber secondary (warm, book-like)
+- **Fast add flow**: floating `+` button → bottom sheet → camera or form
+- **Clear separation**: books and wishlist have distinct visual identities
+
+### Color System
+
+```css
+--primary:        221 83% 53%   /* #2563EB blue    */
+--primary-end:    239 84% 67%   /* #6366F1 indigo  */
+--accent:          38 92% 50%   /* #F59E0B amber   */
+--background:     220 14% 96%   /* off-white       */
+--surface:          0  0% 100%  /* white cards     */
+--border:         220 13% 91%
+--text:           222 47% 11%   /* near-black      */
+--muted:          215 16% 47%
+```
+
+### Typography
+
+- Headings: **Space Grotesk** 700 — modern, editorial
+- Body: **DM Sans** 400/500 — readable, clean
+- Mono (ISBN): **JetBrains Mono**
+
+---
+
+## 6. Getting Started
+
+```bash
+cp .env.local.example .env.local
+# fill in MONGODB_URI, NEXTAUTH_SECRET
+
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+### Environment Variables
+
+```env
+MONGODB_URI=mongodb://localhost:27017/rudebooks
+NEXTAUTH_SECRET=your-secret-here
+NEXTAUTH_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```

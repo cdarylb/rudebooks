@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-dm-sans: 'DM Sans', system-ui, sans-serif;
+    --font-space-grotesk: 'Space Grotesk', system-ui, sans-serif;
+    --font-jetbrains-mono: 'JetBrains Mono', monospace;
+
+    --color-bg:        #0F1117;
+    --color-surface:   #171B26;
+    --color-surface-2: #1E2336;
+    --color-surface-3: #252B3D;
+    --color-edge:      #2D3348;
+    --color-primary:   #8B5CF6;
+    --color-accent:    #8B5CF6;
+    --color-ink:       #E8E6F0;
+    --color-muted:     #8890A8;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    font-family: var(--font-dm-sans);
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-space-grotesk);
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--color-bg); }
+  ::-webkit-scrollbar-thumb { background: var(--color-edge); border-radius: 2px; }
+}
+
+@layer components {
+  .glass-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-edge);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  }
+
+  .field {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-edge);
+    background-color: var(--color-surface-2);
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field::placeholder {
+    color: #525970;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgb(139 92 246 / 0.2);
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  }
+
+  .gradient-text {
+    background-image: linear-gradient(135deg, #A78BFA, #8B5CF6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .bottom-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

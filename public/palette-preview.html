@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RudeBooks — Choix de palette</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #070709;
+      color: #fff;
+      min-height: 100vh;
+      padding: 40px 24px;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #aaa;
+      text-align: center;
+      margin-bottom: 40px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .themes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .theme { border-radius: 20px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+    .theme:hover { transform: translateY(-4px); }
+
+    .theme-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 14px 20px;
+      text-align: center;
+    }
+
+    /* ── Thème A — Obsidienne ── */
+    .a { background: #0A0A0F; box-shadow: 0 0 0 1px #1a1a2a, 0 20px 60px rgba(124,58,237,0.15); }
+    .a .theme-label { background: #0A0A0F; color: #7C3AED; border-bottom: 1px solid #1a1a28; }
+    .a .mock-topbar { background: #111118; border-bottom: 1px solid #1e1e2e; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .a .mock-topbar .logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.9rem; background: linear-gradient(135deg, #7C3AED, #A78BFA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .a .mock-topbar .avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #7C3AED, #5B21B6); }
+    .a .mock-body { padding: 16px; background: #0A0A0F; display: flex; flex-direction: column; gap: 10px; }
+    .a .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .a .stat { border-radius: 14px; padding: 14px; }
+    .a .stat-1 { background: linear-gradient(135deg, #7C3AED, #5B21B6); }
+    .a .stat-2 { background: #111118; border: 1px solid #1e1e2e; }
+    .a .stat-3 { background: #111118; border: 1px solid #1e1e2e; }
+    .a .stat-4 { background: #111118; border: 1px solid #1e1e2e; }
+    .a .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .a .stat-lbl { font-size: 0.7rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+    .a .stat-2 .stat-num, .a .stat-3 .stat-num, .a .stat-4 .stat-num { color: #e0d8ff; }
+    .a .stat-2 .stat-lbl, .a .stat-3 .stat-lbl, .a .stat-4 .stat-lbl { color: #6b6b90; }
+    .a .card { background: #111118; border: 1px solid #1e1e2e; border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; }
+    .a .cover { width: 36px; height: 50px; border-radius: 6px; background: linear-gradient(135deg, #1e1e3a, #2e2050); flex-shrink: 0; }
+    .a .card-title { font-size: 0.75rem; font-weight: 500; color: #ddd8f5; line-height: 1.3; }
+    .a .card-sub { font-size: 0.65rem; color: #6b6b90; margin-top: 2px; }
+    .a .badge { display: inline-block; font-size: 0.6rem; background: rgba(124,58,237,0.2); color: #A78BFA; padding: 2px 7px; border-radius: 20px; margin-top: 4px; border: 1px solid rgba(124,58,237,0.3); }
+    .a .btn { background: linear-gradient(135deg, #7C3AED, #5B21B6); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.72rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .a .mock-nav { background: #111118; border-top: 1px solid #1e1e2e; display: flex; padding: 8px 0 4px; }
+    .a .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.6rem; color: #6b6b90; }
+    .a .nav-item.active { color: #7C3AED; }
+    .a .nav-dot { width: 20px; height: 20px; border-radius: 4px; background: currentColor; opacity: 0.25; }
+    .a .nav-item.active .nav-dot { opacity: 1; background: #7C3AED; }
+    .a .search { background: #111118; border: 1px solid #1e1e2e; border-radius: 8px; padding: 7px 10px; font-size: 0.7rem; color: #6b6b90; }
+
+    /* ── Thème B — Ardoise ── */
+    .b { background: #0F1117; box-shadow: 0 0 0 1px #1c2030, 0 20px 60px rgba(139,92,246,0.12); }
+    .b .theme-label { background: #0F1117; color: #8B5CF6; border-bottom: 1px solid #1c2030; }
+    .b .mock-topbar { background: #171B26; border-bottom: 1px solid #1c2030; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .b .mock-topbar .logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.9rem; background: linear-gradient(135deg, #8B5CF6, #C4B5FD); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .b .mock-topbar .avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+    .b .mock-body { padding: 16px; background: #0F1117; display: flex; flex-direction: column; gap: 10px; }
+    .b .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .b .stat { border-radius: 14px; padding: 14px; }
+    .b .stat-1 { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+    .b .stat-2 { background: #171B26; border: 1px solid #252d40; }
+    .b .stat-3 { background: #171B26; border: 1px solid #252d40; }
+    .b .stat-4 { background: #171B26; border: 1px solid #252d40; }
+    .b .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .b .stat-lbl { font-size: 0.7rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+    .b .stat-2 .stat-num, .b .stat-3 .stat-num, .b .stat-4 .stat-num { color: #e2e8f5; }
+    .b .stat-2 .stat-lbl, .b .stat-3 .stat-lbl, .b .stat-4 .stat-lbl { color: #4a5578; }
+    .b .card { background: #171B26; border: 1px solid #252d40; border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; }
+    .b .cover { width: 36px; height: 50px; border-radius: 6px; background: linear-gradient(135deg, #252d40, #1e2538); flex-shrink: 0; }
+    .b .card-title { font-size: 0.75rem; font-weight: 500; color: #e2e8f5; line-height: 1.3; }
+    .b .card-sub { font-size: 0.65rem; color: #4a5578; margin-top: 2px; }
+    .b .badge { display: inline-block; font-size: 0.6rem; background: rgba(139,92,246,0.15); color: #C4B5FD; padding: 2px 7px; border-radius: 20px; margin-top: 4px; border: 1px solid rgba(139,92,246,0.25); }
+    .b .btn { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.72rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .b .mock-nav { background: #171B26; border-top: 1px solid #252d40; display: flex; padding: 8px 0 4px; }
+    .b .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.6rem; color: #4a5578; }
+    .b .nav-item.active { color: #8B5CF6; }
+    .b .nav-dot { width: 20px; height: 20px; border-radius: 4px; background: currentColor; opacity: 0.25; }
+    .b .nav-item.active .nav-dot { opacity: 1; background: #8B5CF6; }
+    .b .search { background: #171B26; border: 1px solid #252d40; border-radius: 8px; padding: 7px 10px; font-size: 0.7rem; color: #4a5578; }
+
+    /* ── Thème C — Encre ── */
+    .c { background: #0D0C10; box-shadow: 0 0 0 1px #1c1a22, 0 20px 60px rgba(167,139,250,0.1); }
+    .c .theme-label { background: #0D0C10; color: #A78BFA; border-bottom: 1px solid #1c1a22; }
+    .c .mock-topbar { background: #141219; border-bottom: 1px solid #1c1a22; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .c .mock-topbar .logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.9rem; background: linear-gradient(135deg, #A78BFA, #DDD6FE); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .c .mock-topbar .avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #A78BFA, #7C3AED); }
+    .c .mock-body { padding: 16px; background: #0D0C10; display: flex; flex-direction: column; gap: 10px; }
+    .c .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .c .stat { border-radius: 14px; padding: 14px; }
+    .c .stat-1 { background: linear-gradient(135deg, #A78BFA, #7C3AED); }
+    .c .stat-2 { background: #141219; border: 1px solid #1c1a22; }
+    .c .stat-3 { background: #141219; border: 1px solid #1c1a22; }
+    .c .stat-4 { background: #141219; border: 1px solid #1c1a22; }
+    .c .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .c .stat-lbl { font-size: 0.7rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+    .c .stat-2 .stat-num, .c .stat-3 .stat-num, .c .stat-4 .stat-num { color: #EDE8F5; }
+    .c .stat-2 .stat-lbl, .c .stat-3 .stat-lbl, .c .stat-4 .stat-lbl { color: #58536A; }
+    .c .card { background: #141219; border: 1px solid #1c1a22; border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; }
+    .c .cover { width: 36px; height: 50px; border-radius: 6px; background: linear-gradient(135deg, #1c1a28, #241e32); flex-shrink: 0; }
+    .c .card-title { font-size: 0.75rem; font-weight: 500; color: #EDE8F5; line-height: 1.3; }
+    .c .card-sub { font-size: 0.65rem; color: #58536A; margin-top: 2px; }
+    .c .badge { display: inline-block; font-size: 0.6rem; background: rgba(167,139,250,0.12); color: #C4B5FD; padding: 2px 7px; border-radius: 20px; margin-top: 4px; border: 1px solid rgba(167,139,250,0.2); }
+    .c .btn { background: linear-gradient(135deg, #A78BFA, #7C3AED); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.72rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .c .mock-nav { background: #141219; border-top: 1px solid #1c1a22; display: flex; padding: 8px 0 4px; }
+    .c .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.6rem; color: #58536A; }
+    .c .nav-item.active { color: #A78BFA; }
+    .c .nav-dot { width: 20px; height: 20px; border-radius: 4px; background: currentColor; opacity: 0.25; }
+    .c .nav-item.active .nav-dot { opacity: 1; background: #A78BFA; }
+    .c .search { background: #141219; border: 1px solid #1c1a22; border-radius: 8px; padding: 7px 10px; font-size: 0.7rem; color: #58536A; }
+
+    .choose-btn {
+      display: block;
+      width: calc(100% - 32px);
+      margin: 12px 16px 16px;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .choose-btn:hover { opacity: 0.85; }
+    .a .choose-btn { background: #7C3AED; color: #fff; }
+    .b .choose-btn { background: #8B5CF6; color: #fff; }
+    .c .choose-btn { background: #A78BFA; color: #fff; }
+
+    .selected-banner {
+      display: none;
+      text-align: center;
+      margin-top: 32px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      color: #aaa;
+    }
+    .selected-banner span { color: #fff; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<h1>RudeBooks — Choisir une palette</h1>
+
+<div class="themes">
+
+  <!-- THÈME A -->
+  <div class="theme a">
+    <div class="theme-label">A — Obsidienne</div>
+    <div class="mock-topbar">
+      <div class="logo">RudeBooks</div>
+      <div class="avatar"></div>
+    </div>
+    <div class="mock-body">
+      <div class="stat-grid">
+        <div class="stat stat-1"><div class="stat-num">42</div><div class="stat-lbl">Livres</div></div>
+        <div class="stat stat-2"><div class="stat-num">3</div><div class="stat-lbl">Prêtés</div></div>
+        <div class="stat stat-3"><div class="stat-num">12</div><div class="stat-lbl">Souhaits</div></div>
+        <div class="stat stat-4"><div class="stat-num">7</div><div class="stat-lbl">Emplacements</div></div>
+      </div>
+      <div class="search">🔍 &nbsp;Rechercher par titre, auteur…</div>
+      <div class="card">
+        <div class="cover"></div>
+        <div>
+          <div class="card-title">Le Nom de la Rose</div>
+          <div class="card-sub">Umberto Eco</div>
+          <div class="badge">Salon — Étagère A</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cover"></div>
+        <div>
+          <div class="card-title">Fondation</div>
+          <div class="card-sub">Isaac Asimov</div>
+          <div class="badge">Chambre</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end"><button class="btn">+ Ajouter</button></div>
+    </div>
+    <div class="mock-nav">
+      <div class="nav-item active"><div class="nav-dot"></div>Accueil</div>
+      <div class="nav-item"><div class="nav-dot"></div>Livres</div>
+      <div class="nav-item"><div class="nav-dot"></div>Souhaits</div>
+      <div class="nav-item"><div class="nav-dot"></div>Réglages</div>
+    </div>
+    <button class="choose-btn" onclick="choose('A — Obsidienne', '#7C3AED')">Choisir cette palette</button>
+  </div>
+
+  <!-- THÈME B -->
+  <div class="theme b">
+    <div class="theme-label">B — Ardoise</div>
+    <div class="mock-topbar">
+      <div class="logo">RudeBooks</div>
+      <div class="avatar"></div>
+    </div>
+    <div class="mock-body">
+      <div class="stat-grid">
+        <div class="stat stat-1"><div class="stat-num">42</div><div class="stat-lbl">Livres</div></div>
+        <div class="stat stat-2"><div class="stat-num">3</div><div class="stat-lbl">Prêtés</div></div>
+        <div class="stat stat-3"><div class="stat-num">12</div><div class="stat-lbl">Souhaits</div></div>
+        <div class="stat stat-4"><div class="stat-num">7</div><div class="stat-lbl">Emplacements</div></div>
+      </div>
+      <div class="search">🔍 &nbsp;Rechercher par titre, auteur…</div>
+      <div class="card">
+        <div class="cover"></div>
+        <div>
+          <div class="card-title">Le Nom de la Rose</div>
+          <div class="card-sub">Umberto Eco</div>
+          <div class="badge">Salon — Étagère A</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cover"></div>
+        <div>
+          <div class="card-title">Fondation</div>
+          <div class="card-sub">Isaac Asimov</div>
+          <div class="badge">Chambre</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end"><button class="btn">+ Ajouter</button></div>
+    </div>
+    <div class="mock-nav">
+      <div class="nav-item active"><div class="nav-dot"></div>Accueil</div>
+      <div class="nav-item"><div class="nav-dot"></div>Livres</div>
+      <div class="nav-item"><div class="nav-dot"></div>Souhaits</div>
+      <div class="nav-item"><div class="nav-dot"></div>Réglages</div>
+    </div>
+    <button class="choose-btn" onclick="choose('B — Ardoise', '#8B5CF6')">Choisir cette palette</button>
+  </div>
+
+  <!-- THÈME C -->
+  <div class="theme c">
+    <div class="theme-label">C — Encre</div>
+    <div class="mock-topbar">
+      <div class="logo">RudeBooks</div>
+      <div class="avatar"></div>
+    </div>
+    <div class="mock-body">
+      <div class="stat-grid">
+        <div class="stat stat-1"><div class="stat-num">42</div><div class="stat-lbl">Livres</div></div>
+        <div class="stat stat-2"><div class="stat-num">3</div><div class="stat-lbl">Prêtés</div></div>
+        <div class="stat stat-3"><div class="stat-num">12</div><div class="stat-lbl">Souhaits</div></div>
+        <div class="stat stat-4"><div class="stat-num">7</div><div class="stat-lbl">Emplacements</div></div>
+      </div>
+      <div class="search">🔍 &nbsp;Rechercher par titre, auteur…</div>
+      <div class="card">
+        <div class="cover"></div>
+        <div>
+          <div class="card-title">Le Nom de la Rose</div>
+          <div class="card-sub">Umberto Eco</div>
+          <div class="badge">Salon — Étagère A</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cover"></div>
+        <div>
+          <div class="card-title">Fondation</div>
+          <div class="card-sub">Isaac Asimov</div>
+          <div class="badge">Chambre</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end"><button class="btn">+ Ajouter</button></div>
+    </div>
+    <div class="mock-nav">
+      <div class="nav-item active"><div class="nav-dot"></div>Accueil</div>
+      <div class="nav-item"><div class="nav-dot"></div>Livres</div>
+      <div class="nav-item"><div class="nav-dot"></div>Souhaits</div>
+      <div class="nav-item"><div class="nav-dot"></div>Réglages</div>
+    </div>
+    <button class="choose-btn" onclick="choose('C — Encre', '#A78BFA')">Choisir cette palette</button>
+  </div>
+
+</div>
+
+<div class="selected-banner" id="banner">
+  Palette choisie : <span id="chosen"></span> — dites-le à Claude pour l'appliquer.
+</div>
+
+<script>
+  function choose(name, color) {
+    document.getElementById('chosen').textContent = name
+    document.getElementById('chosen').style.color = color
+    document.getElementById('banner').style.display = 'block'
+    document.getElementById('banner').scrollIntoView({ behavior: 'smooth' })
+  }
+</script>
+
+</body>
+</html>
