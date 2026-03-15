@@ -12,7 +12,7 @@ export const BookSchema = z.object({
   publishedYear: z.number().int().min(1000).max(2100).optional(),
   pageCount: z.number().int().min(1).optional(),
   genres: z.array(z.enum(GENRES)).optional(),
-  locationId: z.string().optional(),
+  locationId: z.string().min(1, 'Location is required'),
   locationNote: z.string().optional(),
   favorite: z.boolean().optional(),
 })

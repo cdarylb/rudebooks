@@ -37,7 +37,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const libraryId = (session.user as { libraryId: string }).libraryId
 
     const { locationId, ...rest } = data.data
-    const update = { ...rest, ...(locationId ? { locationId } : { locationId: null }) }
+    const update = { ...rest, ...(locationId !== undefined ? { locationId } : {}) }
     const book = await Book.findOneAndUpdate(
       { _id: params.id, libraryId },
       { $set: update },

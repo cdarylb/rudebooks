@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { ChevronDown } from 'lucide-react'
 import { BookInput } from '@/lib/validators/book'
 import { GENRES, Genre } from '@/lib/genres'
+import AuthorInput from './AuthorInput'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -89,14 +90,17 @@ export default function BookForm({ initialData, onSubmit, submitLabel = 'Ajouter
 
         <Field label="Auteur(s) *">
           {form.authors.map((author, i) => (
-            <input key={i} type="text" value={author}
-              onChange={(e) => {
+            <AuthorInput
+              key={i}
+              value={author}
+              onChange={(v) => {
                 const updated = [...form.authors]
-                updated[i] = e.target.value
+                updated[i] = v
                 setField('authors', updated)
               }}
+              placeholder={`Auteur ${i + 1}`}
               className={`field ${i > 0 ? 'mt-1' : ''}`}
-              placeholder={`Auteur ${i + 1}`} />
+            />
           ))}
           <button type="button"
             onClick={() => setField('authors', [...form.authors, ''])}
@@ -119,9 +123,10 @@ export default function BookForm({ initialData, onSubmit, submitLabel = 'Ajouter
       </div>
 
       <div className="glass-card rounded-2xl p-4 space-y-3">
-        <Field label="Emplacement">
+        <Field label="Emplacement *">
           <select value={form.locationId}
             onChange={(e) => setField('locationId', e.target.value)}
+            required
             className="field">
             <option value="">— Choisir un emplacement —</option>
             {(() => {

@@ -46,9 +46,26 @@ const defaultState: SearchState = {
 }
 
 function loadState(searchParams: URLSearchParams): SearchState {
-  // Si on arrive depuis QuickSearch (?q=...), priorité à l'URL
-  const urlQ = searchParams.get('q')
-  if (urlQ) return { ...defaultState, query: urlQ }
+  // Paramètres URL prioritaires (QuickSearch, liens depuis Stats, etc.)
+  const urlQ          = searchParams.get('q')
+  const urlGenres     = searchParams.getAll('genre')
+  const urlLocationId = searchParams.get('locationId') ?? ''
+  const urlNoCover    = searchParams.get('noCover') === '1'
+  const urlNoGenre    = searchParams.get('noGenre') === '1'
+  const urlNoLocation = searchParams.get('noLocation') === '1'
+
+  if (urlQ || urlGenres.length || urlLocationId || urlNoCover || urlNoGenre || urlNoLocation) {
+    return {
+      ...defaultState,
+      query: urlQ ?? '',
+      selectedGenres: urlGenres,
+      locationId: urlLocationId,
+      noCover: urlNoCover,
+      noGenre: urlNoGenre,
+      noLocation: urlNoLocation,
+      showFilters: urlGenres.length > 0 || !!urlLocationId || urlNoCover || urlNoGenre || urlNoLocation,
+    }
+  }
 
   // Sinon, restaurer depuis sessionStorage
   try {
@@ -132,12 +149,12 @@ export default function BookList() {
       <div className="relative">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle" />
         <input
-          type="search" value={query} onChange={(e) => handleSearch(e.target.value)}
+          type="search" value={query} onChange={(e) => setQuery(e.target.value)}
           placeholder="Rechercher par titre, auteur, ISBN…"
           className="field pl-9 pr-9"
         />
         {query && (
-          <button onClick={() => handleSearch('')}
+          <button onClick={() => setQuery('')}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle hover:text-ink-muted">
             <X size={16} />
           </button>

@@ -19,7 +19,7 @@ export async function GET(_req: NextRequest) {
     ReadingList.countDocuments({ userId, libraryId }),
     Book.find({ libraryId })
       .sort({ createdAt: -1 })
-      .limit(5)
+      .limit(10)
       .populate('locationId', 'name')
       .lean(),
   ])

@@ -1,6 +1,8 @@
 export const GENRES = [
   'Roman',
   'Poésie',
+  'Théâtre',
+  'Essai',
   'Science-fiction',
   'Policier',
   'Roman historique',
@@ -32,6 +34,11 @@ export type Genre = typeof GENRES[number]
 // Mapping des catégories Google Books / Open Library → genres normalisés
 const GENRE_MAP: Record<string, Genre> = {
   'fiction':               'Roman',
+  'theater':               'Théâtre',
+  'theatre':               'Théâtre',
+  'drama':                 'Théâtre',
+  'essay':                 'Essai',
+  'essays':                'Essai',
   'juvenile fiction':      'Jeunesse',
   'juvenile nonfiction':   'Jeunesse',
   'children':              'Jeunesse',

@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
-import { BookOpen, LayoutDashboard, BookOpenText, BookMarked, Heart, MapPin, Settings, LogOut, Menu, X } from 'lucide-react'
+import { BookOpen, LayoutDashboard, BookOpenText, BookMarked, Heart, MapPin, Settings, LogOut, Menu, X, BarChart2 } from 'lucide-react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -13,6 +13,7 @@ const navItems = [
   { href: '/reading-list', icon: BookMarked,      label: 'À lire' },
   { href: '/wishlist',     icon: Heart,           label: 'Souhaits' },
   { href: '/locations',    icon: MapPin,          label: 'Emplacements' },
+  { href: '/stats',        icon: BarChart2,       label: 'Statistiques' },
   { href: '/settings',     icon: Settings,        label: 'Réglages' },
 ]
 

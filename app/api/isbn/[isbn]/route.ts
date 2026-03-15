@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { normalizeIsbn } from '@/lib/utils'
 import { mapGenres } from '@/lib/genres'
+import { load } from 'cheerio'
 
 type Params = { params: { isbn: string } }
 
@@ -16,6 +17,79 @@ interface BookData {
   pageCount?: number
   genres?: string[]
   description?: string
+}
+
+// ── Amazon ────────────────────────────────────────────────────────────────────
+
+function isbn13ToIsbn10(isbn13: string): string | null {
+  if (isbn13.length !== 13 || !isbn13.startsWith('978')) return null
+  const core = isbn13.slice(3, 12)
+  let sum = 0
+  for (let i = 0; i < 9; i++) sum += parseInt(core[i]) * (10 - i)
+  const check = (11 - (sum % 11)) % 11
+  return core + (check === 10 ? 'X' : String(check))
+}
+
+async function fetchAmazon(isbn: string): Promise<BookData | null> {
+  const asin = isbn.length === 13 ? isbn13ToIsbn10(isbn) : isbn
+  if (!asin) return null
+
+  const res = await fetch(`https://www.amazon.fr/dp/${asin}`, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      'Accept-Language': 'fr-FR,fr;q=0.9',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    },
+  })
+  if (!res.ok) return null
+
+  const html = await res.text()
+  const $ = load(html)
+
+  const title = $('#productTitle').text().trim()
+  if (!title) return null  // CAPTCHA ou page vide
+
+  // Auteurs
+  const authors: string[] = []
+  $('#bylineInfo .author .a-link-normal, #bylineInfo .contributorNameID').each((_, el) => {
+    const name = $(el).text().trim()
+    if (name && !authors.includes(name)) authors.push(name)
+  })
+
+  // Couverture
+  const cover =
+    $('#landingImage').attr('src') ||
+    $('#imgTagWrapperId img').first().attr('src') ||
+    ''
+
+  // Détails (éditeur, date, pages)
+  let publisher: string | undefined
+  let publishedYear: number | undefined
+  let pageCount: number | undefined
+
+  $('#detailBullets_feature_div li span.a-list-item').each((_, el) => {
+    const text = $(el).text().replace(/\u200f|\u200e/g, '').replace(/\s+/g, ' ').trim()
+    if (/éditeur/i.test(text)) {
+      const m = text.match(/:\s*([^;(]+)/)
+      if (m) publisher = m[1].trim()
+    }
+    if (/pages/i.test(text)) {
+      const m = text.match(/(\d+)\s*pages/i)
+      if (m) pageCount = parseInt(m[1])
+    }
+    if (/date de parution|publication/i.test(text)) {
+      const m = text.match(/(\d{4})/)
+      if (m) publishedYear = parseInt(m[1])
+    }
+  })
+
+  // Description
+  const description =
+    $('#bookDescription_feature_div .a-expander-content p').map((_, el) => $(el).text().trim()).get().join('\n').trim() ||
+    $('#productDescription p').text().trim() ||
+    undefined
+
+  return { title, authors, isbn, cover, publisher, publishedYear, pageCount, description }
 }
 
 // ── Google Books ──────────────────────────────────────────────────────────────
@@ -217,15 +291,17 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const isbn = normalizeIsbn(params.isbn)
 
   try {
-    const [google, openlib] = await Promise.allSettled([
+    const [amazon, google, openlib] = await Promise.allSettled([
+      fetchAmazon(isbn),
       fetchGoogleBooks(isbn),
       fetchOpenLibrary(isbn),
     ])
 
+    const amazonData  = amazon.status  === 'fulfilled' ? amazon.value  : null
     const googleData  = google.status  === 'fulfilled' ? google.value  : null
     const openlibData = openlib.status === 'fulfilled' ? openlib.value : null
 
-    const data = merge(googleData, openlibData)
+    const data = merge(merge(amazonData, googleData), openlibData)
 
     if (!data) return NextResponse.json({ error: 'Livre introuvable' }, { status: 404 })
 
