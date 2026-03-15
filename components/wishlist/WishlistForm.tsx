@@ -22,7 +22,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const PRIORITY_STYLES: Record<string, string> = {
   low:    'bg-surface-3 border-edge text-ink-muted',
   medium: 'bg-primary/15 border-primary/40 text-primary',
-  high:   'bg-accent/15 border-accent/40 text-accent-400',
+  high:   'bg-primary/25 border-primary/60 text-primary',
 }
 
 export default function WishlistForm({ initialData, onSubmit, submitLabel = 'Ajouter à la liste' }: WishlistFormProps) {

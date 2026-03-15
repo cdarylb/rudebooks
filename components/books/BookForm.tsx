@@ -4,6 +4,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { ChevronDown } from 'lucide-react'
 import { BookInput } from '@/lib/validators/book'
+import { GENRES, Genre } from '@/lib/genres'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -33,22 +34,20 @@ export default function BookForm({ initialData, onSubmit, submitLabel = 'Ajouter
 
   const [form, setForm] = useState<BookInput>({
     title:        initialData?.title ?? '',
-    authors:      initialData?.authors ?? [''],
+    authors:      initialData?.authors?.length ? initialData.authors : [''],
     isbn:         initialData?.isbn ?? '',
     cover:        initialData?.cover ?? '',
     description:  initialData?.description ?? '',
     publisher:    initialData?.publisher ?? '',
     publishedYear: initialData?.publishedYear,
     pageCount:    initialData?.pageCount,
-    language:     initialData?.language ?? '',
     genres:       initialData?.genres ?? [],
     locationId:   initialData?.locationId ?? '',
     locationNote: initialData?.locationNote ?? '',
-    status:       initialData?.status ?? 'owned',
   })
   const [loading, setLoading] = useState(false)
   const [showDetails, setShowDetails] = useState(
-    !!(initialData?.pageCount || initialData?.language || initialData?.genres?.length || initialData?.description || initialData?.publisher)
+    !!(initialData?.pageCount || initialData?.genres?.length || initialData?.description || initialData?.publisher)
   )
 
   function setField<K extends keyof BookInput>(field: K, value: BookInput[K]) {
@@ -158,14 +157,7 @@ export default function BookForm({ initialData, onSubmit, submitLabel = 'Ajouter
             className="field" placeholder="ex. 2e rangée, tranche bleue" />
         </Field>
 
-        <Field label="Statut">
-          <select value={form.status}
-            onChange={(e) => setField('status', e.target.value as 'owned' | 'lent')}
-            className="field">
-            <option value="owned">Possédé</option>
-            <option value="lent">Prêté</option>
-          </select>
-        </Field>
+
       </div>
 
       <button type="button" onClick={() => setShowDetails((v) => !v)}
@@ -196,24 +188,35 @@ export default function BookForm({ initialData, onSubmit, submitLabel = 'Ajouter
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Pages">
-              <input type="number" value={form.pageCount ?? ''}
-                onChange={(e) => setField('pageCount', e.target.value ? parseInt(e.target.value) : undefined)}
-                className="field" />
-            </Field>
-            <Field label="Langue">
-              <input type="text" value={form.language ?? ''}
-                onChange={(e) => setField('language', e.target.value)}
-                className="field" placeholder="fr, en…" />
-            </Field>
-          </div>
+          <Field label="Pages">
+            <input type="number" value={form.pageCount ?? ''}
+              onChange={(e) => setField('pageCount', e.target.value ? parseInt(e.target.value) : undefined)}
+              className="field" />
+          </Field>
 
           <Field label="Genres">
-            <input type="text"
-              value={form.genres?.join(', ') ?? ''}
-              onChange={(e) => setField('genres', e.target.value.split(',').map((g) => g.trim()).filter(Boolean))}
-              className="field" placeholder="Roman, Science-fiction…" />
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              {GENRES.map((g) => {
+                const active = form.genres?.includes(g)
+                return (
+                  <button key={g} type="button"
+                    onClick={() => {
+                      const current = form.genres ?? []
+                      setField('genres', active
+                        ? current.filter((x) => x !== g)
+                        : [...current, g] as Genre[]
+                      )
+                    }}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition ${
+                      active
+                        ? 'bg-primary/20 border-primary/50 text-primary'
+                        : 'bg-surface-2 border-edge text-ink-subtle hover:border-primary/30 hover:text-ink'
+                    }`}>
+                    {g}
+                  </button>
+                )
+              })}
+            </div>
           </Field>
         </div>
       )}

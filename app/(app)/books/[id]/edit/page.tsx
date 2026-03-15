@@ -24,11 +24,9 @@ export default function EditBookPage() {
           publisher:    book.publisher ?? '',
           publishedYear: book.publishedYear,
           pageCount:    book.pageCount,
-          language:     book.language ?? '',
           genres:       book.genres ?? [],
           locationId:   book.locationId?._id ?? book.locationId ?? '',
           locationNote: book.locationNote ?? '',
-          status:       book.status ?? 'owned',
         })
       })
   }, [id])

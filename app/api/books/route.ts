@@ -12,19 +12,38 @@ export async function GET(req: NextRequest) {
   await dbConnect()
 
   const { searchParams } = new URL(req.url)
-  const q = searchParams.get('q')
-  const locationId = searchParams.get('locationId')
-  const status = searchParams.get('status')
-  const page = parseInt(searchParams.get('page') ?? '1')
-  const limit = parseInt(searchParams.get('limit') ?? '20')
+  const q            = searchParams.get('q')?.trim()
+  const locationId   = searchParams.get('locationId')
+  const genres       = searchParams.getAll('genre')
+  const noCover      = searchParams.get('noCover') === '1'
+  const noGenre      = searchParams.get('noGenre') === '1'
+  const noLocation   = searchParams.get('noLocation') === '1'
+  const page         = parseInt(searchParams.get('page') ?? '1')
+  const limit        = parseInt(searchParams.get('limit') ?? '20')
 
   const libraryId = (session.user as { libraryId: string }).libraryId
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filter: Record<string, any> = { libraryId }
-  if (q) filter.$text = { $search: q }
+
+  if (q) {
+    const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+    filter.$or = [
+      { title:     re },
+      { authors:   re },
+      { isbn:      re },
+      { publisher: re },
+    ]
+  }
+
   if (locationId) filter.locationId = locationId
-  if (status) filter.status = status
+  if (genres.length) filter.genres = { $all: genres }
+  if (noCover) filter.cover = { $in: [null, ''] }
+  if (noLocation) filter.locationId = null
+  if (noGenre) filter.$and = [
+    ...(filter.$and ?? []),
+    { $or: [{ genres: { $exists: false } }, { genres: { $size: 0 } }] },
+  ]
 
   const [books, total] = await Promise.all([
     Book.find(filter)

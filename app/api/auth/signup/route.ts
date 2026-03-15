@@ -18,12 +18,35 @@ export async function POST(req: NextRequest) {
 
     const existing = await User.findOne({ email: data.data.email })
     if (existing) {
-      return NextResponse.json({ error: 'Email already in use' }, { status: 409 })
+      return NextResponse.json({ error: 'Email déjà utilisé' }, { status: 409 })
     }
 
     const passwordHash = await bcrypt.hash(data.data.password, 12)
 
-    // Create library first (without owner ID, we'll update after user creation)
+    // — Rejoindre une bibliothèque existante —
+    if (data.data.inviteCode) {
+      const library = await Library.findOne({
+        inviteCode: data.data.inviteCode.trim().toUpperCase(),
+      })
+      if (!library) {
+        return NextResponse.json({ error: 'Code d\'invitation invalide' }, { status: 404 })
+      }
+
+      const user = await User.create({
+        name: data.data.name,
+        email: data.data.email,
+        passwordHash,
+        libraryId: library._id,
+        role: 'member',
+      })
+
+      library.members.push({ userId: user._id, role: 'member' })
+      await library.save()
+
+      return NextResponse.json({ ok: true }, { status: 201 })
+    }
+
+    // — Créer une nouvelle bibliothèque —
     const library = await Library.create({
       name: data.data.libraryName,
       members: [],
@@ -38,7 +61,6 @@ export async function POST(req: NextRequest) {
       role: 'admin',
     })
 
-    // Add user as admin member
     library.members.push({ userId: user._id, role: 'admin' })
     await library.save()
 

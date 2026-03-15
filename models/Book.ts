@@ -11,13 +11,10 @@ export interface IBook extends Document {
   publisher?: string
   publishedYear?: number
   pageCount?: number
-  language?: string
   genres?: string[]
   locationId?: mongoose.Types.ObjectId
   locationNote?: string
-  status: 'owned' | 'lent'
-  lentTo?: string
-  lentAt?: Date
+  favorite?: boolean
   addedBy: mongoose.Types.ObjectId
   createdAt: Date
   updatedAt: Date
@@ -35,13 +32,10 @@ const BookSchema = new Schema<IBook>(
     publisher: { type: String, trim: true },
     publishedYear: { type: Number },
     pageCount: { type: Number },
-    language: { type: String },
     genres: [{ type: String }],
     locationId: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
     locationNote: { type: String, trim: true },
-    status: { type: String, enum: ['owned', 'lent'], default: 'owned' },
-    lentTo: { type: String, trim: true },
-    lentAt: { type: Date },
+    favorite: { type: Boolean, default: false },
     addedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }

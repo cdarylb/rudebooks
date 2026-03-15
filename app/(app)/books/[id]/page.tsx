@@ -1,48 +1,58 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { MapPin, Edit, Calendar, BookOpen, ChevronRight } from 'lucide-react'
+import { MapPin, Calendar, BookOpen, ChevronRight, ChevronLeft } from 'lucide-react'
 import dbConnect from '@/lib/db'
 import Book from '@/models/Book'
-import Location from '@/models/Location'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import PageHeader from '@/components/layout/PageHeader'
-import CoverSearch from '@/components/books/CoverSearch'
+import BookDetailToolbar from '@/components/books/BookDetailToolbar'
+import BookDetailActions from '@/components/books/BookDetailActions'
+import BookCover from '@/components/books/BookCover'
+import ReadingListButton from '@/components/books/ReadingListButton'
+import ReadingList from '@/models/ReadingList'
 import { formatAuthors } from '@/lib/utils'
+import { Genre } from '@/lib/genres'
 
 export default async function BookDetailPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
   if (!session) return null
 
   await dbConnect()
-  const libraryId = (session.user as { libraryId: string }).libraryId
+  const { id: userId, libraryId } = session.user as { id: string; libraryId: string }
   const book = await Book.findOne({ _id: params.id, libraryId })
     .populate({ path: 'locationId', populate: { path: 'parentId', select: 'name' } })
     .lean()
 
   if (!book) notFound()
 
+  const inReadingList = !!(await ReadingList.findOne({ userId, bookId: params.id }))
   const loc = book.locationId as { name: string; parentId?: { name: string } | null } | null
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title=""
-        backHref="/books"
-        action={
-          <Link href={`/books/${params.id}/edit`} className="p-2 rounded-lg hover:bg-surface-2 transition">
-            <Edit size={18} className="text-ink-muted" />
-          </Link>
-        }
-      />
+      {/* Header row: back ← on left, action buttons on right */}
+      <div className="flex items-center justify-between gap-2 pt-1">
+        <Link href="/books"
+          className="p-1.5 rounded-lg hover:bg-surface-2 transition flex-shrink-0 -ml-1.5">
+          <ChevronLeft size={20} className="text-ink-muted" />
+        </Link>
+        <div className="flex items-center gap-2">
+          <ReadingListButton bookId={params.id} initialInList={inReadingList} />
+          <BookDetailToolbar
+            bookId={params.id}
+            editHref={`/books/${params.id}/edit`}
+            isbn={book.isbn}
+            title={book.title}
+            currentCover={book.cover}
+            initialFavorite={book.favorite ?? false}
+          />
+        </div>
+      </div>
 
       <div className="glass-card rounded-2xl p-5">
         <div className="flex gap-4">
           {book.cover ? (
-            <div className="w-20 h-28 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={book.cover} alt={book.title} className="w-full h-full object-contain" />
-            </div>
+            <BookCover src={book.cover} alt={book.title} />
           ) : (
             <div className="w-20 h-28 rounded-lg bg-surface-3 flex items-center justify-center flex-shrink-0">
               <BookOpen size={28} className="text-ink-subtle" />
@@ -85,14 +95,12 @@ export default async function BookDetailPage({ params }: { params: { id: string 
         {book.isbn && (
           <p className="mt-3 font-mono text-xs text-ink-subtle">ISBN: {book.isbn}</p>
         )}
-
-        <CoverSearch
-          bookId={params.id}
-          isbn={book.isbn}
-          title={book.title}
-          currentCover={book.cover}
-        />
       </div>
+
+      <BookDetailActions
+        bookId={params.id}
+        initialGenres={(book.genres ?? []) as Genre[]}
+      />
     </div>
   )
 }

@@ -4,20 +4,19 @@ import { authOptions } from '@/lib/auth'
 import dbConnect from '@/lib/db'
 import Book from '@/models/Book'
 import WishlistItem from '@/models/WishlistItem'
-import Location from '@/models/Location'
+import ReadingList from '@/models/ReadingList'
 
 export async function GET(_req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   await dbConnect()
-  const libraryId = (session.user as { libraryId: string }).libraryId
+  const { libraryId, id: userId } = session.user as { libraryId: string; id: string }
 
-  const [totalBooks, lentBooks, wishlistCount, locationCount, recentBooks] = await Promise.all([
+  const [totalBooks, wishlistCount, readingListCount, recentBooks] = await Promise.all([
     Book.countDocuments({ libraryId }),
-    Book.countDocuments({ libraryId, status: 'lent' }),
     WishlistItem.countDocuments({ libraryId, status: 'wanted' }),
-    Location.countDocuments({ libraryId }),
+    ReadingList.countDocuments({ userId, libraryId }),
     Book.find({ libraryId })
       .sort({ createdAt: -1 })
       .limit(5)
@@ -27,9 +26,8 @@ export async function GET(_req: NextRequest) {
 
   return NextResponse.json({
     totalBooks,
-    lentBooks,
     wishlistCount,
-    locationCount,
+    readingListCount,
     recentBooks,
   })
 }

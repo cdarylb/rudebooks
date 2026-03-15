@@ -2,17 +2,26 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import dbConnect from '@/lib/db'
 import Library from '@/models/Library'
+import User from '@/models/User'
 import PageHeader from '@/components/layout/PageHeader'
-import { Copy, MapPin, ChevronRight } from 'lucide-react'
+import { MapPin, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import InviteCode from '@/components/settings/InviteCode'
+import MembersList from '@/components/settings/MembersList'
 
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions)
   if (!session) return null
 
   await dbConnect()
-  const libraryId = (session.user as { libraryId: string }).libraryId
+  const sessionUser = session.user as { libraryId: string; id: string; role: string }
+  const libraryId = sessionUser.libraryId
   const library = await Library.findById(libraryId).lean()
+
+  // Populate members with user names
+  const memberIds = library?.members.map((m) => m.userId) ?? []
+  const users = await User.find({ _id: { $in: memberIds } }).select('name email').lean()
+  const usersById = Object.fromEntries(users.map((u) => [u._id.toString(), u]))
 
   return (
     <div className="space-y-4">
@@ -24,18 +33,34 @@ export default async function SettingsPage() {
           <p className="text-xs text-ink-subtle mb-1">Nom</p>
           <p className="text-sm font-medium text-ink">{library?.name}</p>
         </div>
-        <div>
-          <p className="text-xs text-ink-subtle mb-1">Code d'invitation</p>
-          <div className="flex items-center gap-2 bg-surface-2 rounded-lg px-3 py-2 border border-edge">
-            <code className="font-mono text-sm text-primary flex-1">{library?.inviteCode}</code>
-            <button className="text-ink-subtle hover:text-ink transition">
-              <Copy size={14} />
-            </button>
+        {sessionUser.role === 'admin' && (
+          <div>
+            <p className="text-xs text-ink-subtle mb-1">Code d'invitation</p>
+            <InviteCode code={library?.inviteCode ?? ''} />
+            <p className="text-xs text-ink-subtle mt-1">
+              Partagez ce code pour inviter d'autres personnes
+            </p>
           </div>
-          <p className="text-xs text-ink-subtle mt-1">
-            Partagez ce code pour inviter d'autres personnes dans votre bibliothèque
-          </p>
-        </div>
+        )}
+      </div>
+
+      <div className="glass-card rounded-2xl p-5 space-y-3">
+        <h3 className="font-heading font-semibold text-ink">
+          Membres ({library?.members.length ?? 0})
+        </h3>
+        <MembersList
+          currentUserId={sessionUser.id}
+          isAdmin={sessionUser.role === 'admin'}
+          members={(library?.members ?? []).map((m) => {
+            const user = usersById[m.userId.toString()]
+            return {
+              userId: m.userId.toString(),
+              role: m.role as 'admin' | 'member',
+              name: user?.name ?? '—',
+              email: user?.email ?? '',
+            }
+          })}
+        />
       </div>
 
       <Link href="/locations"
@@ -49,31 +74,6 @@ export default async function SettingsPage() {
         </div>
         <ChevronRight size={16} className="text-ink-subtle" />
       </Link>
-
-      <div className="glass-card rounded-2xl p-5 space-y-3">
-        <h3 className="font-heading font-semibold text-ink">
-          Membres ({library?.members.length ?? 0})
-        </h3>
-        <div className="space-y-2">
-          {library?.members.map((m) => (
-            <div key={m.userId.toString()} className="flex items-center gap-3 py-1">
-              <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
-                ?
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-ink-muted">{m.userId.toString()}</p>
-              </div>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                m.role === 'admin'
-                  ? 'bg-primary/15 text-primary'
-                  : 'bg-surface-3 text-ink-muted'
-              }`}>
-                {m.role}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }

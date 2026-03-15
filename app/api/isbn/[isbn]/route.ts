@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { normalizeIsbn } from '@/lib/utils'
+import { mapGenres } from '@/lib/genres'
 
 type Params = { params: { isbn: string } }
 
@@ -13,7 +14,6 @@ interface BookData {
   publisher?: string
   publishedYear?: number
   pageCount?: number
-  language?: string
   genres?: string[]
   description?: string
 }
@@ -31,7 +31,7 @@ interface GoogleBooksVolume {
       description?: string
       pageCount?: number
       categories?: string[]
-      language?: string
+
       industryIdentifiers?: Array<{ type: string; identifier: string }>
       imageLinks?: { thumbnail?: string; smallThumbnail?: string }
     }
@@ -54,14 +54,14 @@ async function fetchGoogleBooks(isbn: string): Promise<BookData | null> {
 
   return {
     title: info.title ?? '',
-    authors: info.authors ?? [],
+    authors: info.authors?.length ? info.authors : [],
     isbn,
     cover,
     publisher: info.publisher,
     publishedYear: publishedYear && !isNaN(publishedYear) ? publishedYear : undefined,
     pageCount: info.pageCount,
-    language: info.language,
-    genres: info.categories?.slice(0, 5),
+
+    genres: info.categories ? mapGenres(info.categories) : [],
     description: info.description,
   }
 }
@@ -123,10 +123,7 @@ async function fetchOpenLibrary(isbn: string): Promise<BookData | null> {
     ? parseInt(edition.publish_date.replace(/\D/g, '').slice(0, 4))
     : undefined
 
-  // Language (key like "/languages/fre" → "fre")
-  const language = edition.languages?.[0]?.key?.split('/').pop()
-
-  // Description
+// Description
   const rawDesc = edition.description
   const description = typeof rawDesc === 'string'
     ? rawDesc
@@ -144,7 +141,7 @@ async function fetchOpenLibrary(isbn: string): Promise<BookData | null> {
         const wr = await fetch(`https://openlibrary.org${workKey}.json`)
         if (wr.ok) {
           const work: OpenLibraryWork = await wr.json()
-          genres = work.subjects?.slice(0, 5)
+          genres = work.subjects ? mapGenres(work.subjects) : undefined
           if (!workDescription) {
             const d = work.description
             workDescription = typeof d === 'string' ? d : d?.value
@@ -162,7 +159,6 @@ async function fetchOpenLibrary(isbn: string): Promise<BookData | null> {
     publisher: edition.publishers?.[0],
     publishedYear: publishedYear && !isNaN(publishedYear) ? publishedYear : undefined,
     pageCount: edition.number_of_pages,
-    language,
     genres,
     description: workDescription,
   }
@@ -182,7 +178,6 @@ function merge(primary: BookData | null, secondary: BookData | null): BookData |
     publisher:    primary.publisher    ?? secondary.publisher,
     publishedYear: primary.publishedYear ?? secondary.publishedYear,
     pageCount:    primary.pageCount    ?? secondary.pageCount,
-    language:     primary.language     ?? secondary.language,
     genres:       primary.genres?.length ? primary.genres : secondary.genres,
     description:  primary.description  ?? secondary.description,
   }

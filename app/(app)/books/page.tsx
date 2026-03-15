@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
@@ -18,7 +19,9 @@ export default function BooksPage() {
           </Link>
         }
       />
-      <BookList />
+      <Suspense>
+        <BookList />
+      </Suspense>
     </div>
   )
 }
