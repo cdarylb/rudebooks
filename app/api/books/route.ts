@@ -18,8 +18,10 @@ export async function GET(req: NextRequest) {
   const noCover      = searchParams.get('noCover') === '1'
   const noGenre      = searchParams.get('noGenre') === '1'
   const noLocation   = searchParams.get('noLocation') === '1'
+  const noPrice      = searchParams.get('noPrice') === '1'
   const page         = parseInt(searchParams.get('page') ?? '1')
   const limit        = parseInt(searchParams.get('limit') ?? '20')
+  const sort         = searchParams.get('sort')
 
   const libraryId = (session.user as { libraryId: string }).libraryId
 
@@ -44,11 +46,15 @@ export async function GET(req: NextRequest) {
     ...(filter.$and ?? []),
     { $or: [{ genres: { $exists: false } }, { genres: { $size: 0 } }] },
   ]
+  if (noPrice) filter.$and = [
+    ...(filter.$and ?? []),
+    { $or: [{ price: { $exists: false } }, { price: null }] },
+  ]
 
   const [books, total] = await Promise.all([
     Book.find(filter)
       .populate('locationId', 'name')
-      .sort({ createdAt: -1 })
+      .sort(sort === 'author' ? { 'authors.0': 1, title: 1 } : { createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean(),

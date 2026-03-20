@@ -85,6 +85,8 @@ export async function GET(_req: NextRequest) {
           withGenre:    { $sum: { $cond: [{ $gt: [{ $size: { $ifNull: ['$genres', []] } }, 0] }, 1, 0] } },
           withLocation: { $sum: { $cond: [{ $ne: ['$locationId', null] }, 1, 0] } },
           favorites:    { $sum: { $cond: ['$favorite', 1, 0] } },
+          withPrice:    { $sum: { $cond: [{ $isNumber: '$price' }, 1, 0] } },
+          totalValue:   { $sum: { $cond: [{ $isNumber: '$price' }, '$price', 0] } },
         },
       },
     ]),
@@ -108,6 +110,6 @@ export async function GET(_req: NextRequest) {
     authorStats,
     monthlyStats,
     roomStats,
-    totals: totals[0] ?? { total: 0, withCover: 0, withGenre: 0, withLocation: 0, favorites: 0 },
+    totals: totals[0] ?? { total: 0, withCover: 0, withGenre: 0, withLocation: 0, favorites: 0, withPrice: 0, totalValue: 0 },
   })
 }

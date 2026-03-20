@@ -15,6 +15,8 @@ export interface IBook extends Document {
   locationId?: mongoose.Types.ObjectId
   locationNote?: string
   favorite?: boolean
+  price?: number
+  priceCheckedAt?: Date
   addedBy: mongoose.Types.ObjectId
   createdAt: Date
   updatedAt: Date
@@ -36,6 +38,8 @@ const BookSchema = new Schema<IBook>(
     locationId: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
     locationNote: { type: String, trim: true },
     favorite: { type: Boolean, default: false },
+    price: { type: Number },
+    priceCheckedAt: { type: Date },
     addedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }

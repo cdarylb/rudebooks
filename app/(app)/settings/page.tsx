@@ -8,6 +8,9 @@ import { MapPin, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import InviteCode from '@/components/settings/InviteCode'
 import MembersList from '@/components/settings/MembersList'
+import MigrateGenresButton from '@/components/settings/MigrateGenresButton'
+import FetchPricesButton from '@/components/settings/FetchPricesButton'
+import FetchPricesGoogleButton from '@/components/settings/FetchPricesGoogleButton'
 
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions)
@@ -61,6 +64,13 @@ export default async function SettingsPage() {
             }
           })}
         />
+      </div>
+
+      <div className="glass-card rounded-2xl p-5 space-y-3">
+        <h3 className="font-heading font-semibold text-ink">Maintenance des données</h3>
+        <MigrateGenresButton />
+        <FetchPricesGoogleButton />
+        <FetchPricesButton />
       </div>
 
       <Link href="/locations"

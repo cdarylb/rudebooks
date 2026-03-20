@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MapPin, BookOpen, BookMarked } from 'lucide-react'
 import { formatAuthors } from '@/lib/utils'
+import { Genre } from '@/lib/genres'
 import QuickLocationPicker from './QuickLocationPicker'
+import QuickGenrePicker from './QuickGenrePicker'
 
 interface BookCardProps {
   book: {
@@ -13,6 +15,7 @@ interface BookCardProps {
     authors: string[]
     cover?: string
     locationId?: { _id?: string; name: string } | null
+    genres?: string[]
   }
   inReadingList?: boolean
 }
@@ -21,6 +24,7 @@ export default function BookCard({ book, inReadingList: initialInList }: BookCar
   const router = useRouter()
   const [inList, setInList]     = useState(initialInList ?? false)
   const [location, setLocation] = useState(book.locationId ?? null)
+  const [genres, setGenres]     = useState<Genre[]>((book.genres ?? []) as Genre[])
   const showToggle = initialInList !== undefined
 
   async function toggleReadingList(e: React.MouseEvent) {
@@ -50,7 +54,7 @@ export default function BookCard({ book, inReadingList: initialInList }: BookCar
         <p className="font-medium text-ink text-sm leading-snug line-clamp-2">{book.title}</p>
         <p className="text-xs text-ink-muted mt-0.5 truncate">{formatAuthors(book.authors)}</p>
 
-        <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
           {location ? (
             <span className="text-xs text-ink-subtle flex items-center gap-0.5 truncate">
               <MapPin size={10} className="flex-shrink-0" />
@@ -60,6 +64,13 @@ export default function BookCard({ book, inReadingList: initialInList }: BookCar
             <QuickLocationPicker
               bookId={book._id}
               onSaved={(loc) => setLocation(loc)}
+            />
+          )}
+          {genres.length === 0 && (
+            <QuickGenrePicker
+              bookId={book._id}
+              initialGenres={genres}
+              onSaved={(g) => setGenres(g)}
             />
           )}
         </div>

@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Heart, ImageIcon, Edit, Check, X, Loader2 } from 'lucide-react'
+import { Heart, ImageIcon, Edit, Check, X, Loader2, Trash2, Euro, ShoppingCart } from 'lucide-react'
 
 interface BookDetailToolbarProps {
   bookId: string
@@ -11,6 +12,7 @@ interface BookDetailToolbarProps {
   title: string
   currentCover?: string
   initialFavorite: boolean
+  initialPrice?: number
 }
 
 export default function BookDetailToolbar({
@@ -20,14 +22,49 @@ export default function BookDetailToolbar({
   title,
   currentCover,
   initialFavorite,
+  initialPrice,
 }: BookDetailToolbarProps) {
-  const [favorite, setFavorite]     = useState(initialFavorite)
-  const [coverOpen, setCoverOpen]   = useState(false)
-  const [loading, setLoading]       = useState(false)
-  const [candidates, setCandidates] = useState<string[]>([])
-  const [selected, setSelected]     = useState<string | null>(null)
-  const [saving, setSaving]         = useState(false)
-  const [error, setError]           = useState<string | null>(null)
+  const router = useRouter()
+  const [favorite, setFavorite]       = useState(initialFavorite)
+  const [coverOpen, setCoverOpen]     = useState(false)
+  const [loading, setLoading]         = useState(false)
+  const [candidates, setCandidates]   = useState<string[]>([])
+  const [selected, setSelected]       = useState<string | null>(null)
+  const [saving, setSaving]           = useState(false)
+  const [error, setError]             = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting]       = useState(false)
+  const [price, setPrice]                   = useState<number | undefined>(initialPrice)
+  const [priceLoading, setPriceLoading]     = useState(false)
+  const [amazonLoading, setAmazonLoading]   = useState(false)
+  const [priceError, setPriceError]         = useState<string | null>(null)
+
+  async function doFetchPrice(source: 'google' | 'amazon') {
+    if (!isbn) return
+    const setLoading = source === 'amazon' ? setAmazonLoading : setPriceLoading
+    setLoading(true)
+    setPriceError(null)
+    const res = await fetch(`/api/price/${isbn}?source=${source}`)
+    if (res.ok) {
+      const { price: found } = await res.json()
+      setPrice(found)
+      await fetch(`/api/books/${bookId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price: found }),
+      })
+    } else {
+      const label = source === 'amazon' ? 'Amazon' : 'Google Books'
+      setPriceError(`Prix introuvable sur ${label}`)
+    }
+    setLoading(false)
+  }
+
+  async function deleteBook() {
+    setDeleting(true)
+    await fetch(`/api/books/${bookId}`, { method: 'DELETE' })
+    router.push('/books')
+  }
 
   async function toggleFavorite() {
     const next = !favorite
@@ -74,7 +111,7 @@ export default function BookDetailToolbar({
       }
     } catch { /* skip */ }
 
-    const unique = [...new Set(results)].filter(Boolean)
+    const unique = Array.from(new Set(results)).filter(Boolean)
     if (unique.length === 0) setError('Aucune couverture trouvée.')
     setCandidates(unique)
     setLoading(false)
@@ -136,7 +173,66 @@ export default function BookDetailToolbar({
         >
           <Edit size={17} />
         </Link>
+
+        {isbn && (
+          <>
+            <button
+              onClick={() => doFetchPrice('google')}
+              disabled={priceLoading || amazonLoading}
+              title={price != null ? `Prix Google Books : ${price} €` : 'Rechercher le prix (Google Books)'}
+              className={`p-2 rounded-lg border transition ${
+                price != null
+                  ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+                  : 'bg-surface-2 border-edge text-ink-muted hover:text-ink disabled:opacity-50'
+              }`}
+            >
+              {priceLoading ? <Loader2 size={17} className="animate-spin" /> : <Euro size={17} />}
+            </button>
+            <button
+              onClick={() => doFetchPrice('amazon')}
+              disabled={priceLoading || amazonLoading}
+              title="Rechercher le prix (Amazon)"
+              className="p-2 rounded-lg border bg-surface-2 border-edge text-ink-muted hover:text-ink disabled:opacity-50 transition"
+            >
+              {amazonLoading ? <Loader2 size={17} className="animate-spin" /> : <ShoppingCart size={17} />}
+            </button>
+          </>
+        )}
+
+        {confirmDelete ? (
+          <>
+            <button
+              onClick={deleteBook}
+              disabled={deleting}
+              title="Confirmer la suppression"
+              className="p-2 rounded-lg border bg-red-500/15 border-red-500/40 text-red-400 hover:bg-red-500/25 transition disabled:opacity-50"
+            >
+              {deleting ? <Loader2 size={17} className="animate-spin" /> : <Check size={17} />}
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              title="Annuler"
+              className="p-2 rounded-lg border bg-surface-2 border-edge text-ink-muted hover:text-ink transition"
+            >
+              <X size={17} />
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            title="Supprimer le livre"
+            className="p-2 rounded-lg border bg-surface-2 border-edge text-ink-muted hover:text-red-400 hover:border-red-500/30 transition"
+          >
+            <Trash2 size={17} />
+          </button>
+        )}
       </div>
+
+      {/* Price feedback */}
+      {priceError && <p className="text-xs text-red-400">{priceError}</p>}
+      {price != null && !priceError && (
+        <p className="text-xs text-emerald-400">{price.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</p>
+      )}
 
       {/* Cover picker */}
       {error && <p className="text-xs text-red-400">{error}</p>}

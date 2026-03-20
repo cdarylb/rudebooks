@@ -45,10 +45,11 @@ export default function BookForm({ initialData, onSubmit, submitLabel = 'Ajouter
     genres:       initialData?.genres ?? [],
     locationId:   initialData?.locationId ?? '',
     locationNote: initialData?.locationNote ?? '',
+    price:        initialData?.price,
   })
   const [loading, setLoading] = useState(false)
   const [showDetails, setShowDetails] = useState(
-    !!(initialData?.pageCount || initialData?.genres?.length || initialData?.description || initialData?.publisher)
+    !!(initialData?.pageCount || initialData?.genres?.length || initialData?.description || initialData?.publisher || initialData?.price)
   )
 
   function setField<K extends keyof BookInput>(field: K, value: BookInput[K]) {
@@ -110,7 +111,7 @@ export default function BookForm({ initialData, onSubmit, submitLabel = 'Ajouter
         </Field>
 
         <Field label="ISBN">
-          <input type="text" value={form.isbn}
+          <input type="text" inputMode="numeric" value={form.isbn}
             onChange={(e) => setField('isbn', e.target.value)}
             className="field font-mono" placeholder="9780000000000" />
         </Field>
@@ -193,11 +194,18 @@ export default function BookForm({ initialData, onSubmit, submitLabel = 'Ajouter
             </Field>
           </div>
 
-          <Field label="Pages">
-            <input type="number" value={form.pageCount ?? ''}
-              onChange={(e) => setField('pageCount', e.target.value ? parseInt(e.target.value) : undefined)}
-              className="field" />
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Pages">
+              <input type="number" value={form.pageCount ?? ''}
+                onChange={(e) => setField('pageCount', e.target.value ? parseInt(e.target.value) : undefined)}
+                className="field" />
+            </Field>
+            <Field label="Prix (€)">
+              <input type="number" value={form.price ?? ''}
+                onChange={(e) => setField('price', e.target.value ? parseFloat(e.target.value) : undefined)}
+                className="field" min={0} step={0.01} placeholder="0.00" />
+            </Field>
+          </div>
 
           <Field label="Genres">
             <div className="flex flex-wrap gap-1.5 mt-1">

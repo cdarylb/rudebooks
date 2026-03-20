@@ -19,6 +19,7 @@ interface Book {
   authors: string[]
   cover?: string
   locationId?: { _id: string; name: string } | null
+  genres?: string[]
 }
 
 interface Location {
@@ -37,12 +38,13 @@ interface SearchState {
   noCover: boolean
   noGenre: boolean
   noLocation: boolean
+  noPrice: boolean
   showFilters: boolean
 }
 
 const defaultState: SearchState = {
   query: '', page: 1, selectedGenres: [], locationId: '',
-  noCover: false, noGenre: false, noLocation: false, showFilters: false,
+  noCover: false, noGenre: false, noLocation: false, noPrice: false, showFilters: false,
 }
 
 function loadState(searchParams: URLSearchParams): SearchState {
@@ -53,8 +55,9 @@ function loadState(searchParams: URLSearchParams): SearchState {
   const urlNoCover    = searchParams.get('noCover') === '1'
   const urlNoGenre    = searchParams.get('noGenre') === '1'
   const urlNoLocation = searchParams.get('noLocation') === '1'
+  const urlNoPrice    = searchParams.get('noPrice') === '1'
 
-  if (urlQ || urlGenres.length || urlLocationId || urlNoCover || urlNoGenre || urlNoLocation) {
+  if (urlQ || urlGenres.length || urlLocationId || urlNoCover || urlNoGenre || urlNoLocation || urlNoPrice) {
     return {
       ...defaultState,
       query: urlQ ?? '',
@@ -63,7 +66,8 @@ function loadState(searchParams: URLSearchParams): SearchState {
       noCover: urlNoCover,
       noGenre: urlNoGenre,
       noLocation: urlNoLocation,
-      showFilters: urlGenres.length > 0 || !!urlLocationId || urlNoCover || urlNoGenre || urlNoLocation,
+      noPrice: urlNoPrice,
+      showFilters: urlGenres.length > 0 || !!urlLocationId || urlNoCover || urlNoGenre || urlNoLocation || urlNoPrice,
     }
   }
 
@@ -91,7 +95,7 @@ export default function BookList() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const { query, page, selectedGenres, locationId, noCover, noGenre, noLocation, showFilters } = state
+  const { query, page, selectedGenres, locationId, noCover, noGenre, noLocation, noPrice, showFilters } = state
 
   function setState(patch: Partial<SearchState>) {
     setStateRaw((prev) => ({ ...prev, ...patch }))
@@ -103,6 +107,7 @@ export default function BookList() {
   const setNoCover      = (noCover: boolean)        => setState({ noCover, page: 1 })
   const setNoGenre      = (noGenre: boolean)        => setState({ noGenre, page: 1 })
   const setNoLocation   = (noLocation: boolean)     => setState({ noLocation, page: 1 })
+  const setNoPrice      = (noPrice: boolean)        => setState({ noPrice, page: 1 })
   const setShowFilters  = (showFilters: boolean)    => setState({ showFilters })
 
   const { data: locations } = useSWR<Location[]>('/api/locations', fetcher)
@@ -122,7 +127,7 @@ export default function BookList() {
     setState({ selectedGenres: next, page: 1 })
   }
   function clearFilters() {
-    setState({ selectedGenres: [], locationId: '', noCover: false, noGenre: false, noLocation: false, page: 1 })
+    setState({ selectedGenres: [], locationId: '', noCover: false, noGenre: false, noLocation: false, noPrice: false, page: 1 })
   }
 
   const apiParams = new URLSearchParams({ limit: String(LIMIT), page: String(page) })
@@ -132,6 +137,7 @@ export default function BookList() {
   if (noCover) apiParams.set('noCover', '1')
   if (noGenre) apiParams.set('noGenre', '1')
   if (noLocation) apiParams.set('noLocation', '1')
+  if (noPrice) apiParams.set('noPrice', '1')
 
   const { data, isLoading } = useSWR<{ books: Book[]; total: number }>(
     `/api/books?${apiParams}`, fetcher
@@ -140,7 +146,7 @@ export default function BookList() {
   const readingSet = new Set(readingList?.map((i) => i.bookId?._id) ?? [])
 
   const totalPages = data ? Math.ceil(data.total / LIMIT) : 1
-  const hasActiveFilters = selectedGenres.length > 0 || !!locationId || noCover || noGenre || noLocation
+  const hasActiveFilters = selectedGenres.length > 0 || !!locationId || noCover || noGenre || noLocation || noPrice
   const rooms = locations?.filter((l) => !l.parentId) ?? []
   const spots = locations?.filter((l) => !!l.parentId) ?? []
 
@@ -173,7 +179,7 @@ export default function BookList() {
         Filtres
         {hasActiveFilters && (
           <span className="ml-0.5 bg-primary text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-            {selectedGenres.length + (locationId ? 1 : 0) + (noCover ? 1 : 0) + (noGenre ? 1 : 0) + (noLocation ? 1 : 0)}
+            {selectedGenres.length + (locationId ? 1 : 0) + (noCover ? 1 : 0) + (noGenre ? 1 : 0) + (noLocation ? 1 : 0) + (noPrice ? 1 : 0)}
           </span>
         )}
       </button>
@@ -204,6 +210,7 @@ export default function BookList() {
               { label: 'Sans couverture', active: noCover, toggle: () => setNoCover(!noCover) },
               { label: 'Genre non renseigné', active: noGenre, toggle: () => setNoGenre(!noGenre) },
               { label: 'Sans emplacement', active: noLocation, toggle: () => setNoLocation(!noLocation) },
+              { label: 'Sans prix', active: noPrice, toggle: () => setNoPrice(!noPrice) },
             ].map(({ label, active, toggle }) => (
               <button key={label} type="button" onClick={toggle}
                 className={`text-xs px-2.5 py-1 rounded-full border transition ${

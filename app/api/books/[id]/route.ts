@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const book = await Book.findOneAndUpdate(
       { _id: params.id, libraryId },
       { $set: update },
-      { new: true }
+      { new: true, strict: false }
     ).populate('locationId', 'name')
 
     if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 })

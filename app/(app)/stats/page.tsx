@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import useSWR from 'swr'
-import { BookOpen, Image, Tag, MapPin, Heart, ChevronDown } from 'lucide-react'
+import { BookOpen, Image, Tag, MapPin, ChevronDown, Download, Euro } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
 import Spinner from '@/components/ui/Spinner'
 
@@ -17,6 +17,7 @@ interface MonthlyStat { year: number; month: number; count: number }
 interface Totals {
   total: number; withCover: number; withGenre: number
   withLocation: number; favorites: number
+  withPrice: number; totalValue: number
 }
 interface SpotStat  { locationId: string; spotName: string; count: number }
 interface RoomStat  { roomName: string; spots: SpotStat[]; total: number }
@@ -42,6 +43,17 @@ function pct(value: number, max: number) {
 
 const rowClass = 'flex items-center gap-2 group cursor-pointer rounded-lg px-1 -mx-1 hover:bg-surface-3 transition'
 
+const exportAction = (
+  <a
+    href="/api/books/export"
+    download="bibliotheque.xlsx"
+    className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-primary transition px-2.5 py-1.5 rounded-lg hover:bg-surface-3"
+  >
+    <Download size={13} />
+    Export Excel
+  </a>
+)
+
 export default function StatsPage() {
   const [closedRooms, setClosedRooms] = useState<Set<string>>(new Set())
   const { data, isLoading } = useSWR<StatsData>('/api/library-stats', fetcher)
@@ -57,7 +69,7 @@ export default function StatsPage() {
   if (isLoading || !data) {
     return (
       <div className="space-y-4">
-        <PageHeader title="Statistiques" />
+        <PageHeader title="Statistiques" action={exportAction} />
         <div className="flex justify-center py-16"><Spinner /></div>
       </div>
     )
@@ -75,17 +87,19 @@ export default function StatsPage() {
   const maxGenre   = genreStats[0]?.count ?? 1
   const maxAuthor  = authorStats[0]?.count ?? 1
 
+  const formattedValue = totals.totalValue.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+
   const summaryCards = [
     { label: 'Livres',       icon: BookOpen, value: totals.total,        color: 'text-primary',      href: '/books' },
     { label: 'Sans couverture', icon: Image, value: totals.total - totals.withCover, color: 'text-emerald-400', href: '/books?noCover=1' },
     { label: 'Sans genre',   icon: Tag,      value: totals.total - totals.withGenre, color: 'text-violet-400', href: '/books?noGenre=1' },
     { label: 'Sans emplacement', icon: MapPin, value: totals.total - totals.withLocation, color: 'text-amber-400', href: '/books?noLocation=1' },
-    { label: 'Favoris',      icon: Heart,    value: totals.favorites,    color: 'text-rose-400',     href: '/books' },
+    { label: 'Sans prix',    icon: Euro,     value: totals.total - (totals.withPrice ?? 0), color: 'text-sky-400', href: '/books' },
   ]
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Statistiques" />
+      <PageHeader title="Statistiques" action={exportAction} />
 
       {/* Summary */}
       <div className="grid grid-cols-5 gap-2">
@@ -98,6 +112,29 @@ export default function StatsPage() {
           </Link>
         ))}
       </div>
+
+      {/* Valeur de la bibliothèque */}
+      {totals.withPrice > 0 && (
+        <section className="glass-card rounded-2xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/20">
+              <Euro size={18} className="text-emerald-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-ink-subtle">Valeur estimée ({totals.withPrice} livre{totals.withPrice > 1 ? 's' : ''} renseigné{totals.withPrice > 1 ? 's' : ''})</p>
+              <p className="text-2xl font-heading font-bold text-ink leading-tight">{formattedValue} €</p>
+            </div>
+            {totals.withPrice > 0 && (
+              <div className="text-right">
+                <p className="text-xs text-ink-subtle">Moyenne</p>
+                <p className="text-sm font-semibold text-ink-muted">
+                  {(totals.totalValue / totals.withPrice).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Ajouts par mois */}
       <section className="glass-card rounded-2xl p-4 space-y-3">
@@ -183,7 +220,10 @@ export default function StatsPage() {
       {/* Auteurs */}
       {authorStats.length > 0 && (
         <section className="glass-card rounded-2xl p-4 space-y-3">
-          <h2 className="text-sm font-semibold text-ink">Auteurs les plus représentés</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-ink">Auteurs les plus représentés</h2>
+            <Link href="/stats/authors" className="text-[11px] text-primary hover:underline">Harmoniser →</Link>
+          </div>
           <div className="space-y-1.5">
             {authorStats.map(({ author, count }, i) => (
               <Link key={author} href={`/books?q=${encodeURIComponent(author)}`} className={rowClass}>

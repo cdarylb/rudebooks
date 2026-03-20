@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { normalizeIsbn } from '@/lib/utils'
 import { mapGenres } from '@/lib/genres'
 import { load } from 'cheerio'
+import { fetchFnacPrice, fetchGoogleBooksPrice } from '@/lib/price'
 
 type Params = { params: { isbn: string } }
 
@@ -17,6 +18,7 @@ interface BookData {
   pageCount?: number
   genres?: string[]
   description?: string
+  price?: number
 }
 
 // ── Amazon ────────────────────────────────────────────────────────────────────
@@ -89,7 +91,26 @@ async function fetchAmazon(isbn: string): Promise<BookData | null> {
     $('#productDescription p').text().trim() ||
     undefined
 
-  return { title, authors, isbn, cover, publisher, publishedYear, pageCount, description }
+  // Prix
+  let price: number | undefined
+  const priceSelectors = [
+    '#price',
+    '#newBuyBoxPrice',
+    '.kindle-price .a-color-price',
+    '.buybox-tabpanel .a-price .a-offscreen',
+    '#buyNewSection .a-price .a-offscreen',
+    '.a-price.priceToPay .a-offscreen',
+  ]
+  for (const sel of priceSelectors) {
+    const raw = $(sel).first().text().trim()
+    const m = raw.match(/([\d]+[.,][\d]{2})/)
+    if (m) {
+      price = parseFloat(m[1].replace(',', '.'))
+      break
+    }
+  }
+
+  return { title, authors, isbn, cover, publisher, publishedYear, pageCount, description, price }
 }
 
 // ── Google Books ──────────────────────────────────────────────────────────────
@@ -254,6 +275,7 @@ function merge(primary: BookData | null, secondary: BookData | null): BookData |
     pageCount:    primary.pageCount    ?? secondary.pageCount,
     genres:       primary.genres?.length ? primary.genres : secondary.genres,
     description:  primary.description  ?? secondary.description,
+    price:        primary.price        ?? secondary.price,
   }
 }
 
@@ -291,17 +313,26 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const isbn = normalizeIsbn(params.isbn)
 
   try {
-    const [amazon, google, openlib] = await Promise.allSettled([
+    const [amazon, google, openlib, fnacPrice, googlePrice] = await Promise.allSettled([
       fetchAmazon(isbn),
       fetchGoogleBooks(isbn),
       fetchOpenLibrary(isbn),
+      fetchFnacPrice(isbn),
+      fetchGoogleBooksPrice(isbn),
     ])
 
-    const amazonData  = amazon.status  === 'fulfilled' ? amazon.value  : null
-    const googleData  = google.status  === 'fulfilled' ? google.value  : null
-    const openlibData = openlib.status === 'fulfilled' ? openlib.value : null
+    const amazonData  = amazon.status   === 'fulfilled' ? amazon.value   : null
+    const googleData  = google.status   === 'fulfilled' ? google.value   : null
+    const openlibData = openlib.status  === 'fulfilled' ? openlib.value  : null
+    const fnacPriceValue   = fnacPrice.status   === 'fulfilled' ? fnacPrice.value   : null
+    const googlePriceValue = googlePrice.status === 'fulfilled' ? googlePrice.value : null
 
     const data = merge(merge(amazonData, googleData), openlibData)
+    // Priorité prix : Google Books → Amazon (data.price) → Fnac
+    if (data) {
+      const bestPrice = googlePriceValue ?? data.price ?? fnacPriceValue ?? null
+      if (bestPrice !== null) data.price = bestPrice
+    }
 
     if (!data) return NextResponse.json({ error: 'Livre introuvable' }, { status: 404 })
 

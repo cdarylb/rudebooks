@@ -12,6 +12,7 @@ import ReadingListButton from '@/components/books/ReadingListButton'
 import ReadingList from '@/models/ReadingList'
 import { formatAuthors } from '@/lib/utils'
 import { Genre } from '@/lib/genres'
+import PriceEditor from '@/components/books/PriceEditor'
 
 export default async function BookDetailPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
@@ -45,6 +46,7 @@ export default async function BookDetailPage({ params }: { params: { id: string 
             title={book.title}
             currentCover={book.cover}
             initialFavorite={book.favorite ?? false}
+            initialPrice={book.price}
           />
         </div>
       </div>
@@ -92,9 +94,12 @@ export default async function BookDetailPage({ params }: { params: { id: string 
           <p className="mt-4 text-sm text-ink-muted leading-relaxed line-clamp-6">{book.description}</p>
         )}
 
-        {book.isbn && (
-          <p className="mt-3 font-mono text-xs text-ink-subtle">ISBN: {book.isbn}</p>
-        )}
+        <div className="mt-3 flex items-center gap-3">
+          {book.isbn && (
+            <p className="font-mono text-xs text-ink-subtle">ISBN: {book.isbn}</p>
+          )}
+          <PriceEditor bookId={params.id} initialPrice={book.price} />
+        </div>
       </div>
 
       <BookDetailActions

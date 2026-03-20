@@ -15,6 +15,7 @@ export const BookSchema = z.object({
   locationId: z.string().min(1, 'Location is required'),
   locationNote: z.string().optional(),
   favorite: z.boolean().optional(),
+  price: z.number().min(0).optional(),
 })
 
 export type BookInput = z.infer<typeof BookSchema>
