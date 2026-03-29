@@ -27,6 +27,7 @@ export const GENRES = [
   'Manga / Comics',
   'Roman graphique',
   'Jeunesse',
+  'Scolaire',
 ] as const
 
 export type Genre = typeof GENRES[number]

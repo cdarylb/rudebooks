@@ -132,6 +132,7 @@ export default function AddBookPage() {
             <div className="flex gap-2">
               <input
                 type="text"
+                inputMode="numeric"
                 value={isbnInput}
                 onChange={(e) => { setIsbnInput(e.target.value); setIsbnError(null) }}
                 onKeyDown={(e) => e.key === 'Enter' && lookupIsbn(isbnInput)}
