@@ -168,7 +168,7 @@ export default function BookList() {
       </div>
 
       <button
-        onClick={() => setShowFilters((v) => !v)}
+        onClick={() => setShowFilters(!showFilters)}
         className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition ${
           showFilters || hasActiveFilters
             ? 'bg-primary/15 border-primary/40 text-primary'
