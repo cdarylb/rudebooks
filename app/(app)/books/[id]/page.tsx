@@ -27,7 +27,7 @@ export default async function BookDetailPage({ params }: { params: { id: string 
   if (!book) notFound()
 
   const inReadingList = !!(await ReadingList.findOne({ userId, bookId: params.id }))
-  const loc = book.locationId as { name: string; parentId?: { name: string } | null } | null
+  const loc = book.locationId as unknown as { name: string; parentId?: { name: string } | null } | null
 
   return (
     <div className="space-y-4">
