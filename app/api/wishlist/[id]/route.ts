@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         cover: item.cover,
         description: item.description,
         status: 'owned',
-        addedBy: session.user.id,
+        addedBy: (session.user as { id: string }).id,
       })
     }
 

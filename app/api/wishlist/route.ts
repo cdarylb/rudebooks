@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     const item = await WishlistItem.create({
       ...data.data,
       libraryId,
-      addedBy: session.user.id,
+      addedBy: (session.user as { id: string }).id,
     })
 
     return NextResponse.json(item, { status: 201 })

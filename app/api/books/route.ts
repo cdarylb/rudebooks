@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       ...rest,
       ...(locationId ? { locationId } : {}),
       libraryId,
-      addedBy: session.user.id,
+      addedBy: (session.user as { id: string }).id,
     })
 
     return NextResponse.json(book, { status: 201 })
