@@ -18,6 +18,6 @@ jobs:
           script: |
             cd /home/dario/apps/rudebooks
             git pull origin main
-            npm ci --omit=dev
+            npm ci
             npm run build
             pm2 restart rudebooks --update-env
