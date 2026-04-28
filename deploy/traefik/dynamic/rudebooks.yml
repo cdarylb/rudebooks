@@ -5,6 +5,8 @@ http:
       entryPoints:
         - websecure
       service: rudebooks-svc
+      middlewares:
+        - security-headers
       tls:
         certResolver: letsencrypt
 
@@ -13,3 +15,13 @@ http:
       loadBalancer:
         servers:
           - url: "http://host.docker.internal:3002"
+
+  middlewares:
+    security-headers:
+      headers:
+        stsSeconds: 63072000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        contentTypeNosniff: true
+        frameDeny: true
+        referrerPolicy: strict-origin-when-cross-origin
