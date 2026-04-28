@@ -1,0 +1,15 @@
+http:
+  routers:
+    rudebooks:
+      rule: "Host(`rudebooks.cyrilb.me`)"
+      entryPoints:
+        - websecure
+      service: rudebooks-svc
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    rudebooks-svc:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:3002"
