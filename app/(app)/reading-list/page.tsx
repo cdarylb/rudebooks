@@ -21,7 +21,7 @@ export default async function ReadingListPage() {
     .lean()
 
   const books = items
-    .map((item) => item.bookId as { _id: object; title: string; authors: string[]; cover?: string; locationId?: { name: string } | null })
+    .map((item) => item.bookId as unknown as { _id: object; title: string; authors: string[]; cover?: string; locationId?: { name: string } | null })
     .filter(Boolean)
 
   return (
