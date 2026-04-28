@@ -62,7 +62,7 @@ export default function CoverSearch({ bookId, isbn, title, currentCover }: Cover
     } catch { /* skip */ }
 
     // Dédupliquer
-    const unique = [...new Set(results)].filter(Boolean)
+    const unique = Array.from(new Set(results)).filter(Boolean)
     if (unique.length === 0) setError('Aucune couverture trouvée.')
     setCandidates(unique)
     setLoading(false)
