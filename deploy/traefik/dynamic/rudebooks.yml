@@ -1,5 +1,15 @@
 http:
   routers:
+    traefik-dashboard:
+      rule: "Host(`traefik.cyrilb.me`)"
+      entryPoints:
+        - websecure
+      service: api@internal
+      middlewares:
+        - dashboard-auth
+      tls:
+        certResolver: letsencrypt
+
     rudebooks:
       rule: "Host(`rudebooks.cyrilb.me`)"
       entryPoints:
@@ -17,6 +27,11 @@ http:
           - url: "http://host.docker.internal:3002"
 
   middlewares:
+    dashboard-auth:
+      basicAuth:
+        users:
+          - "dario:$apr1$FneDEecG$Vp8nUmQ7uLNdCNuyMECv/1"
+
     security-headers:
       headers:
         stsSeconds: 63072000
@@ -25,3 +40,7 @@ http:
         contentTypeNosniff: true
         frameDeny: true
         referrerPolicy: strict-origin-when-cross-origin
+        customResponseHeaders:
+          X-Powered-By: ""
+          X-Hello: "We need a bigger boat"
+          Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://m.media-amazon.com https://books.google.com https://covers.openlibrary.org https://products-images.di-static.com https://www.babelio.com https://static.fnac-static.com https://images.weserv.nl https://www.bdzoom.com https://encrypted-tbn0.gstatic.com https://encrypted-tbn3.gstatic.com https://i.ebayimg.com https://pictures.abebooks.com; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
