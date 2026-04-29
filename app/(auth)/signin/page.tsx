@@ -63,12 +63,12 @@ export default function SigninPage() {
         {loading ? 'Connexion…' : 'Se connecter'}
       </button>
 
-      <p className="text-center text-sm text-ink-muted">
+      {/* <p className="text-center text-sm text-ink-muted">
         Pas de compte ?{' '}
         <Link href="/signup" className="text-primary font-medium hover:underline">
           Créer un compte
         </Link>
-      </p>
+      </p> */}
     </form>
   )
 }
