@@ -7,17 +7,16 @@ import Spinner from '@/components/ui/Spinner'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-interface Stats { totalBooks: number; wishlistCount: number }
+interface Stats { totalBooks: number; wishlistCount: number; readingListCount: number }
 
 export default function StatsGrid() {
-  const { data: stats }       = useSWR<Stats>('/api/stats', fetcher)
-  const { data: readingList } = useSWR<unknown[]>('/api/reading-list', fetcher)
+  const { data: stats } = useSWR<Stats>('/api/stats', fetcher)
 
-  if (!stats || !readingList) return <div className="flex justify-center py-8"><Spinner /></div>
+  if (!stats) return <div className="flex justify-center py-8"><Spinner /></div>
 
   const cards = [
     { label: 'Livres',   icon: BookOpen,   href: '/books',        value: stats.totalBooks      },
-    { label: 'À lire',   icon: BookMarked, href: '/reading-list', value: readingList.length    },
+    { label: 'À lire',   icon: BookMarked, href: '/reading-list', value: stats.readingListCount },
     { label: 'Souhaits', icon: Heart,      href: '/wishlist',     value: stats.wishlistCount   },
   ]
 
