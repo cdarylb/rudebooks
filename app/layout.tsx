@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { DM_Sans, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
+import { headers } from 'next/headers'
 import './globals.css'
 
 const dmSans = DM_Sans({
@@ -35,6 +36,10 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Force dynamic rendering so Next.js reads x-nonce from middleware
+  // and applies it to its generated inline scripts (required for nonce-based CSP).
+  headers()
+
   return (
     <html lang="fr" className={`${dmSans.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
       <body>{children}</body>
