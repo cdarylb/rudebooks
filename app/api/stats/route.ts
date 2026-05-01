@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import dbConnect from '@/lib/db'
 import Book from '@/models/Book'
+import Location from '@/models/Location'
 import WishlistItem from '@/models/WishlistItem'
 import ReadingList from '@/models/ReadingList'
 

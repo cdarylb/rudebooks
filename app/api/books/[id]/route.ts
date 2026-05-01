@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import dbConnect from '@/lib/db'
 import Book from '@/models/Book'
+import '@/models/Location'
 import { BookUpdateSchema } from '@/lib/validators/book'
 
 type Params = { params: { id: string } }
