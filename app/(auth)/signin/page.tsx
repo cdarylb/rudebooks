@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 
 export default function SigninPage() {
@@ -28,7 +27,7 @@ export default function SigninPage() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 space-y-4">
+    <form onSubmit={handleSubmit} method="post" className="glass-card rounded-2xl p-6 space-y-4">
       <h2 className="font-heading text-xl font-semibold text-ink">Connexion</h2>
 
       {error && (
